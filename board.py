@@ -15,21 +15,6 @@ class Ship:
                 x += 1
         return r
 
-    @classmethod
-    def create_ship(cls, ship_list):
-        for i, s in enumerate(ship_list):
-            print(f'{i+1}\t' + '#'*s)
-        i = int(input('Pick a ship to place'))
-        direction = input(
-            'Enter V to place vertically, '
-            'or H to place horizontally')
-        x, y = input('Enter cordinates on the form X Y').split(' ')
-        x = int(x)
-        y = int(y)
-        ship = Ship((x,y), direction, ship_list[i-1])
-        del ship_list[i-1]
-        return ship
-
 class Board:
     WATER = 0
     HIT   = 1
