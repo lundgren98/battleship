@@ -75,9 +75,16 @@ class Board:
                 hp += col == Board.SHIP
         return hp
 
+    def shots_fired(self):
+        shots = 0
+        for row in self.board:
+            for col in row:
+                shots += col & Board.HIT
+        return shots
+
     def __str__(self):
         display_state = ".O#X"
-        s = f'+-0123456789-+ {self.health()}\n'
+        s = f'+-0123456789-+ HP: {self.health()}\n'
         for row in range(self.h):
             s += f'{row} '
             for col in range(self.w):
@@ -85,7 +92,10 @@ class Board:
                 if self.hide and not (position_state & Board.HIT):
                     position_state &= ~Board.SHIP
                 s += display_state[position_state]
-            s += ' |\n'
+            s += ' |'
+            if row == 0:
+                s += f' Shots: {self.shots_fired()}'
+            s += '\n'
         s += '+-' + self.w * '-' + '-+'
         return s
 

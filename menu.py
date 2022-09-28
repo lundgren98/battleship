@@ -2,6 +2,7 @@ from board import Board, Ship
 from random import randint, choice
 from time import sleep
 import os
+import csv
 
 def print_boards(top_board, bottom_board):
     os.system('clear')
@@ -12,6 +13,8 @@ def player_shoot(board):
     x, y = input('Where to shoot?\n> ').split(' ')
     x = int(x)
     y = int(y)
+    if x < 0 or y < 0:
+        raise IndexError
     return board.shoot(x, y)
 
 def ai_shoot(board, not_hit):
@@ -70,8 +73,7 @@ def pick_cordinates(ship_list, player_board, enemy_board, err_msg = None):
         valid_cordinates = True
     return cordinates
 
-def place_phase(player_board, enemy_board):
-# PLACE SHIPS
+def manual_placement(player_board, enemy_board):
     err_msg = None
     ship_list = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
     while ship_list:
@@ -90,48 +92,37 @@ def place_phase(player_board, enemy_board):
             if not valid_cordinates:
                 err_msg = 'You cannot place a ship here'
 
-## HARD CODING SHIPS
-#    player_board.place_ship(Ship((0,0), 'V', 4))
-#    player_board.place_ship(Ship((0,2), 'V', 3))
-#    player_board.place_ship(Ship((0,4), 'V', 3))
-#    player_board.place_ship(Ship((0,6), 'V', 2))
-#    player_board.place_ship(Ship((0,8), 'V', 2))
-#    player_board.place_ship(Ship((6,0), 'V', 2))
-#    player_board.place_ship(Ship((6,2), 'V', 1))
-#    player_board.place_ship(Ship((6,4), 'V', 1))
-#    player_board.place_ship(Ship((6,6), 'V', 1))
-#    player_board.place_ship(Ship((6,8), 'V', 1))
-#
-    enemy_board.place_ship(Ship((0,0), 'V', 4))
-    enemy_board.place_ship(Ship((0,2), 'V', 3))
-    enemy_board.place_ship(Ship((0,4), 'V', 3))
-    enemy_board.place_ship(Ship((0,6), 'V', 2))
-    enemy_board.place_ship(Ship((0,8), 'V', 2))
-    enemy_board.place_ship(Ship((6,0), 'V', 2))
-    enemy_board.place_ship(Ship((6,2), 'V', 1))
-    enemy_board.place_ship(Ship((6,4), 'V', 1))
-    enemy_board.place_ship(Ship((6,6), 'V', 1))
-    enemy_board.place_ship(Ship((6,8), 'V', 1))
+def place_from_file(path, board):
+    board_state = []
+    with open(path, 'r') as f:
+        r = csv.reader(f)
+        for row in r:
+            board_state.append([int(x) for x in row])
+    board.board = board_state
+
+def place_phase(player_board, enemy_board):
+    #manual_placement(player_board, enemy_board)
+    place_from_file('ai_ships.csv', player_board)
+    place_from_file('ai_ships.csv', enemy_board)
 
 def bomb_phase(player_board, enemy_board):
     player_turn = True 
     not_hit_pl = [(x,y) for x in range(10) for y in range(10)]
+    #not_hit_en = [(x,y) for x in range(10) for y in range(10)]
     err_msg = None
     while player_board.health() and enemy_board.health():
-        sleep(0.2)
         print_boards(player_board, enemy_board)
         if err_msg:
             print(err_msg)
         if player_turn:
             try:
+                #player_turn = ai_shoot(enemy_board, not_hit_en)
                 player_turn = player_shoot(enemy_board)
             except ValueError:
                 err_msg = 'You must give two integers'\
                         ' with a space in between'
             except IndexError:
                 err_msg = 'Your cordinates must be on the board'
-            except Exception as e:
-                err_msg = repr(e)
             else:
                 err_msg = None
         else:
@@ -140,21 +131,22 @@ def bomb_phase(player_board, enemy_board):
     return player_board.health()
 
 def main():
-    # show ships DONE
-    # choose ship to place DONE
-    # redo if cannot place ship
     # ask for confirmation
     player_board = Board()
     enemy_board = Board(hide = True)
-    print_boards(player_board, enemy_board)
 
     place_phase(player_board, enemy_board)
     bomb_phase(player_board, enemy_board)
-
     if player_board.health():
-        print('YOU WON!')
+        win_or_lose = 'WON'
+        winner = 'you'
+        loser_board = enemy_board
     else:
-        print('YOU LOST!')
+        win_or_lose = 'LOST'
+        winner = 'your enemy'
+        loser_board = player_board
+    print(f'YOU {win_or_lose}! It took {winner} '
+          f'{loser_board.shots_fired()} tries.')
 
 
 if __name__ == '__main__':
