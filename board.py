@@ -15,6 +15,14 @@ class Ship:
                 x += 1
         return r
 
+    def water_space(self):
+        cords = self.all_cordinates()
+        ret = []
+        for row in range(-1,2):
+            for col in range(-1,2):
+                ret.extend([(x+col,y+row) for x, y in cords])
+        return list(set(ret))
+
 class Board:
     WATER = 0
     HIT   = 1
@@ -31,10 +39,26 @@ class Board:
                 return True
         return False
 
+    def get_cordinates_on_board(self, cordinates):
+        ret = []
+        for x, y in cordinates:
+            if x in range(self.w) and y in range(self.h):
+                ret.append((x,y))
+        return ret
+
+    def is_cordinates_on_board(self, cordinates):
+        for x, y in cordinates:
+            if x in range(self.w) and y in range(self.h):
+                continue
+            return False
+        return True
 
     def place_ship(self, ship):
         cordinates = ship.all_cordinates()
-        if self.space_is_occupied(cordinates):
+        if not self.is_cordinates_on_board(cordinates):
+            return False
+        water_space = self.get_cordinates_on_board(ship.water_space())
+        if self.space_is_occupied(water_space):
             return False
         for x, y in cordinates:
             self.board[y][x] = Board.SHIP

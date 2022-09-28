@@ -32,6 +32,8 @@ def pick_ship(ship_list, top_board, bottom_board):
             print(err_msg)
         try:
             ship_index = int(input('Pick a ship to place\n> ')) - 1
+            if ship_index < 0:
+                raise IndexError
             ship_length = ship_list[ship_index]
         except (ValueError, IndexError):
             err_msg = 'You must pick one of the numbered ships'
