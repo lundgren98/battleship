@@ -32,6 +32,7 @@ class Board:
         self.w = w
         self.hide = hide
         self.board = [[Board.WATER] * w for _ in range(h)] 
+        self.info_text = []
 
     def space_is_occupied(self, cordinates):
         for x, y in cordinates:
@@ -84,7 +85,11 @@ class Board:
 
     def __str__(self):
         display_state = ".O#X"
-        s = f'+-0123456789-+ HP: {self.health()}\n'
+        text = [f'HP: {self.health()}',
+                f'Shots: {self.shots_fired()}',
+                '']
+        text.extend(self.info_text)
+        s = f'+-0123456789-+\n'
         for row in range(self.h):
             s += f'{row} '
             for col in range(self.w):
@@ -92,10 +97,8 @@ class Board:
                 if self.hide and not (position_state & Board.HIT):
                     position_state &= ~Board.SHIP
                 s += display_state[position_state]
-            s += ' |'
-            if row == 0:
-                s += f' Shots: {self.shots_fired()}'
-            s += '\n'
+            text_row = text[row] if len(text) > row else ''
+            s += f' | {text_row}\n'
         s += '+-' + self.w * '-' + '-+'
         return s
 

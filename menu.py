@@ -4,6 +4,10 @@ from time import sleep
 import os
 import csv
 
+SAVE_DIR = 'save_data'
+PLAYER_SAVE_FILE = f'{SAVE_DIR}/player_board.csv'
+ENEMY_SAVE_FILE = f'{SAVE_DIR}/enemy_board.csv'
+
 def yes_no_input(message, yes_is_default = True):
     if yes_is_default:
         choices = 'Y/n'
@@ -23,18 +27,36 @@ def print_boards(top_board, bottom_board):
     print(top_board)
     print(bottom_board)
 
-def player_shoot(board):
-    x, y = input('Where to shoot?\n> ').split(' ')
+def player_shoot(player_board, enemy_board):
+    u_input = input('Where to shoot?\n> ')
+    if u_input.lower() == 'quit':
+        exit()
+    if u_input.lower() == 'save':
+        if not os.path.exists(SAVE_DIR):
+            os.makedirs(SAVE_DIR)
+        write_board_to_file(PLAYER_SAVE_FILE,
+                            player_board.board)
+        write_board_to_file(ENEMY_SAVE_FILE,
+                            enemy_board.board)
+        enemy_board.info_text.append('The game has been saved')
+        return True
+    x, y = u_input.split(' ')
     x = int(x)
     y = int(y)
     if x < 0 or y < 0:
         raise IndexError
-    return board.shoot(x, y)
+    return enemy_board.shoot(x, y)
 
 def ai_shoot(board, not_hit):
-    cordinates = choice(not_hit)
-    not_hit.remove(cordinates)
-    return board.shoot(*(cordinates))
+    x, y = choice(not_hit)
+    not_hit.remove((x, y))
+    hit = board.shoot(x, y)
+    hit_str = 'hit' if hit else 'missed'
+    board.info_text.append(f'Enemy {hit_str} at {x} {y}')
+    free_space = board.h - len(board.info_text) - 3
+    if free_space < 0:
+        del board.info_text[:-free_space]
+    return hit
 
 def pick_ship(ship_list, top_board, bottom_board):
     valid_index = False
@@ -136,6 +158,9 @@ def bomb_phase(player_board, enemy_board):
     not_hit_pl = [(x,y) for x in range(10) for y in range(10)]
     not_hit_en = [(x,y) for x in range(10) for y in range(10)]
     err_msg = None
+    enemy_board.info_text = ['X hit shot', 'O missed shot','',
+                             'Write SAVE to save your game',
+                             'Write QUIT to quit']
     while player_board.health() and enemy_board.health():
         print_boards(player_board, enemy_board)
         if err_msg:
@@ -143,13 +168,14 @@ def bomb_phase(player_board, enemy_board):
         if player_turn:
             try:
                 #player_turn = ai_shoot(enemy_board, not_hit_en)
-                player_turn = player_shoot(enemy_board)
+                player_turn = player_shoot(player_board, enemy_board)
             except ValueError:
                 err_msg = 'You must give two integers'\
                         ' with a space in between'
             except IndexError:
                 err_msg = 'Your cordinates must be on the board'
             else:
+                del player_board.info_text[:]
                 err_msg = None
         else:
             player_turn = not ai_shoot(player_board, not_hit_pl)
@@ -199,8 +225,16 @@ def write_board_to_file(path, board):
 def main():
     player_board = Board()
     enemy_board = Board(hide = True)
-    while place_phase(player_board, enemy_board):
-        pass
+    if os.path.exists(f'{SAVE_DIR}/player_board.csv') \
+            and os.path.exists(f'{SAVE_DIR}/enemy_board.csv') \
+            and yes_no_input(
+                    'A save file exists\n'
+                    'Do you want to load and continue from this file?'):
+        place_from_file(PLAYER_SAVE_FILE, player_board)
+        place_from_file(ENEMY_SAVE_FILE, enemy_board)
+    else:
+        while place_phase(player_board, enemy_board):
+            pass
     bomb_phase(player_board, enemy_board)
     print_winner_message(player_board, enemy_board)
     save_stats('stats.csv', player_board, enemy_board)
