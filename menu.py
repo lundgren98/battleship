@@ -8,7 +8,11 @@ SAVE_DIR = 'save_data'
 PLAYER_SAVE_FILE = f'{SAVE_DIR}/player_board.csv'
 ENEMY_SAVE_FILE = f'{SAVE_DIR}/enemy_board.csv'
 
-def yes_no_input(message, yes_is_default = True):
+def yes_no_input(message: str, yes_is_default: bool = True) -> bool:
+    """Prompt the user a yes or no question.
+    Returns True if answer is yes.
+    Returns False if answer is no.
+    Returns the default otherwise."""
     if yes_is_default:
         choices = 'Y/n'
         short = 'n'
@@ -22,23 +26,24 @@ def yes_no_input(message, yes_is_default = True):
         return not yes_is_default
     return yes_is_default
 
-def print_boards(top_board, bottom_board):
+def print_boards(top_board: Board, bottom_board: Board):
     os.system('clear')
     print(top_board)
     print(bottom_board)
 
-def player_shoot(player_board, enemy_board):
+def player_shoot(player_board: Board, enemy_board: Board) -> bool:
+    """Prompt the player to shoot at enemy board.
+    Returns a bool indicating if it hit a ship or not."""
     u_input = input('Where to shoot?\n> ')
     if u_input.lower() == 'quit':
         exit()
     if u_input.lower() == 'save':
         if not os.path.exists(SAVE_DIR):
             os.makedirs(SAVE_DIR)
-        write_board_to_file(PLAYER_SAVE_FILE,
-                            player_board.board)
-        write_board_to_file(ENEMY_SAVE_FILE,
-                            enemy_board.board)
+        write_board_to_file(PLAYER_SAVE_FILE, player_board.board)
+        write_board_to_file(ENEMY_SAVE_FILE, enemy_board.board)
         enemy_board.info_text.append('The game has been saved')
+        # Exploiting the fact that a hit means you can shoot again
         return True
     x, y = u_input.split(' ')
     x = int(x)
@@ -47,7 +52,7 @@ def player_shoot(player_board, enemy_board):
         raise IndexError
     return enemy_board.shoot(x, y)
 
-def ai_shoot(board, not_hit):
+def ai_shoot(board: Board, not_hit: list[tuple[int,int]]) -> bool:
     x, y = choice(not_hit)
     not_hit.remove((x, y))
     hit = board.shoot(x, y)
@@ -58,7 +63,10 @@ def ai_shoot(board, not_hit):
         del board.info_text[:-free_space]
     return hit
 
-def pick_ship(ship_list, top_board, bottom_board):
+def pick_ship(ship_list: list[int],
+              top_board: Board,
+              bottom_board: Board
+              ) -> int:
     valid_index = False
     err_msg = None
     ship_index = None
@@ -81,7 +89,7 @@ def pick_ship(ship_list, top_board, bottom_board):
     del ship_list[ship_index]
     return ship_length
 
-def pick_direction(top_board, bottom_board):
+def pick_direction(top_board: Board, bottom_board: Board) -> str:
     direction = None
     while direction not in ['H', 'V']:
         print_boards(top_board, bottom_board)
@@ -91,7 +99,11 @@ def pick_direction(top_board, bottom_board):
                           'or H to place horizontally\n> ').upper()
     return direction
 
-def pick_cordinates(ship_list, player_board, enemy_board, err_msg = None):
+def pick_cordinates(ship_list: list,
+                    player_board: Board,
+                    enemy_board: Board,
+                    err_msg: str | None = None
+                    ) -> tuple[int, int]:
     valid_cordinates = False
     cordinates = None
     while not valid_cordinates:
@@ -109,7 +121,7 @@ def pick_cordinates(ship_list, player_board, enemy_board, err_msg = None):
         valid_cordinates = True
     return cordinates
 
-def manual_placement(player_board, enemy_board):
+def manual_placement(player_board: Board, enemy_board: Board):
     err_msg = None
     ship_list = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
     while ship_list:
@@ -128,7 +140,32 @@ def manual_placement(player_board, enemy_board):
             if not valid_cordinates:
                 err_msg = 'You cannot place a ship here'
 
-def place_from_file(path, board):
+def auto_placement(board: Board):
+    err_msg = None
+    ship_list = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
+    while ship_list:
+        ship_length = ship_list.pop()
+        direction = choice(['V','H'])
+        if direction == 'V':
+            max_y = board.h - ship_length
+            max_x = board.w - 1
+        else:
+            may_y = board.h - 1
+            max_x = board.w - ship_length
+        valid_cordinates = False
+        while not valid_cordinates:
+            x = randint(0,max_x)
+            y = randint(0,max_y)
+            cordinates = (x, y)
+            ship = Ship(cordinates, direction, ship_length)
+            try:
+                valid_cordinates = board.place_ship(ship)
+            except IndexError:
+                valid_cordinates = False
+
+def place_from_file(path: str, board: Board):
+    """Set the board state according to file.
+    Returns a bool indicating success."""
     board_state = []
     try:
         with open(path, 'r') as f:
@@ -144,16 +181,20 @@ def place_from_file(path, board):
         return True
     return False
 
-def place_phase(player_board, enemy_board):
+def place_phase(player_board: Board, enemy_board: Board) -> bool:
+    """Returns a bool indicating if something went wrong."""
     if yes_no_input('Do you want to load ship placement from file?'):
         if not place_from_file(input('file to read: '), player_board):
             return True
     else:
         manual_placement(player_board, enemy_board)
-    place_from_file('ai_ships.csv', enemy_board)
+    #place_from_file('ai_ships.csv', enemy_board)
+    auto_placement(enemy_board)
     return False
 
-def bomb_phase(player_board, enemy_board):
+def bomb_phase(player_board: Board, enemy_board: Board) -> int:
+    """Run the bomb phase of the game.
+    Returns how many of the player's ship spaces has not been hit."""
     player_turn = True 
     not_hit_pl = [(x,y) for x in range(10) for y in range(10)]
     not_hit_en = [(x,y) for x in range(10) for y in range(10)]
@@ -161,6 +202,7 @@ def bomb_phase(player_board, enemy_board):
     enemy_board.info_text = ['X hit shot', 'O missed shot','',
                              'Write SAVE to save your game',
                              'Write QUIT to quit']
+    # Game continues until either runs out of health
     while player_board.health() and enemy_board.health():
         print_boards(player_board, enemy_board)
         if err_msg:
@@ -182,7 +224,7 @@ def bomb_phase(player_board, enemy_board):
     print_boards(player_board, enemy_board)
     return player_board.health()
 
-def print_winner_message(player_board, enemy_board):
+def print_winner_message(player_board: Board, enemy_board: Board):
     if player_board.health():
         win_or_lose = 'WON'
         winner = 'you'
@@ -194,7 +236,7 @@ def print_winner_message(player_board, enemy_board):
     print(f'YOU {win_or_lose}! It took {winner} '
           f'{loser_board.shots_fired()} tries.')
 
-def save_stats(path, player_board, enemy_board):
+def save_stats(path: str, player_board: Board, enemy_board: Board):
     if player_board.health():
         winner = 'you'
         tries = enemy_board.shots_fired()
@@ -204,7 +246,9 @@ def save_stats(path, player_board, enemy_board):
     with open(path, 'a') as f:
         f.write(f'{winner},{tries}\n')
 
-def save_ship_placement(board):
+def save_ship_placement(board: Board) -> bool:
+    """Promts the user to save the board's ship placements.
+    Returns a bool indicating if something went wrong."""
     if not yes_no_input('Do you want to save your ship placements?'):
         return False
     path = input('file to write: ')
@@ -213,11 +257,12 @@ def save_ship_placement(board):
                 f'The file {path} already exists.\n'
                 'Are you sure you want to overwrite it?', False):
             return True
+    #         Check for ships only
     ships = [[v & Board.SHIP for v in row] for row in board.board]
     write_board_to_file(path, ships)
     return False
 
-def write_board_to_file(path, board):
+def write_board_to_file(path: str, board: Board):
     with open(path, 'w') as f:
         for row in board:
             f.write(','.join(map(str, row)) + '\n')
@@ -225,8 +270,7 @@ def write_board_to_file(path, board):
 def main():
     player_board = Board()
     enemy_board = Board(hide = True)
-    if os.path.exists(f'{SAVE_DIR}/player_board.csv') \
-            and os.path.exists(f'{SAVE_DIR}/enemy_board.csv') \
+    if os.path.exists(PLAYER_SAVE_FILE) and os.path.exists(ENEMY_SAVE_FILE) \
             and yes_no_input(
                     'A save file exists\n'
                     'Do you want to load and continue from this file?'):
