@@ -28,12 +28,15 @@ class Board:
     WATER = 0
     HIT   = 1
     SHIP  = 2
-    def __init__(self, h: int = 10, w: int = 10, hide: bool = False):
+    def __init__(self, h: int = 10, w: int = 10, hide: bool = False,
+                 hp_str: str = 'HP', shots_str = 'Shots'):
         self.h = h
         self.w = w
         self.hide = hide
         # Fill the board with water
         self.board = [[Board.WATER] * w for _ in range(h)] 
+        self._hp_str = hp_str 
+        self._shots_str = shots_str 
         self.info_text = []
 
     def space_is_occupied(self, cordinates: list[tuple[int,int]]) -> bool:
@@ -95,8 +98,8 @@ class Board:
     def __str__(self):
         display_state = ".O#X"
         # text to show to the right of the board
-        text = [f'HP: {self.health()}',
-                f'Shots: {self.shots_fired()}',
+        text = [f'{self._hp_str}: {self.health()}',
+                f'{self._shots_str}: {self.shots_fired()}',
                 '']
         text.extend(self.info_text)
 
