@@ -1,3 +1,4 @@
+from db import Data
 from board import Board, Ship
 from random import randint, choice
 from time import sleep
@@ -247,6 +248,22 @@ def save_stats(path: str, player_board: Board, enemy_board: Board):
     with open(path, 'a') as f:
         f.write(f'{winner},{tries}\n')
 
+def save_db_stats(db: Data, player_board: Board, enemy_board: Board):
+    if player_board.health():
+        winner_health = player_board.health()
+        winner = 'guest'
+        loser = 'enemy'
+        winner_tries = enemy_board.shots_fired()
+        loser_tries = player_board.shots_fired()
+    else:
+        winner_health = enemy_board.health()
+        winner = 'enemy'
+        loser = 'guest'
+        winner_tries = player_board.shots_fired()
+        loser_tries = enemy_board.shots_fired()
+    db.add_game('guest', winner, loser,
+                winner_tries, loser_tries, winner_health)
+
 def save_ship_placement(board: Board) -> bool:
     """Promts the user to save the board's ship placements.
     Returns a bool indicating if something went wrong."""
@@ -276,6 +293,7 @@ def load_language(path):
         language = json.load(f)
 
 def main():
+    data = Data('stats.db')
     load_language('language/swedish.json')
     player_board = Board(hp_str = language['hp'],
                          shots_str = language['shots'])
@@ -292,6 +310,7 @@ def main():
     bomb_phase(player_board, enemy_board)
     print_winner_message(player_board, enemy_board)
     save_stats('stats.csv', player_board, enemy_board)
+    save_db_stats(data, player_board, enemy_board)
     while save_ship_placement(player_board):
         pass
 
