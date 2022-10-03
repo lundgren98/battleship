@@ -1,5 +1,7 @@
 from db import Data
 from board import Board, Ship
+from getpass import getpass
+import hashlib
 from random import randint, choice
 from time import sleep
 import os
@@ -19,15 +21,6 @@ def yes_no_input(message: str, yes_is_default: bool = True) -> bool:
     Returns the default otherwise."""
     choices, short, verbose = language['yes is default'] if yes_is_default \
             else language['no is default']
-    
-#    if yes_is_default:
-#        choices = 'Y/n'
-#        short = 'n'
-#        verbose = 'no'
-#    else:
-#        choices = 'y/N'
-#        short = 'y'
-#        verbose = 'yes'
     u_input = input(f'{message} [{choices}]\n> ').lower()
     if u_input == short or u_input == verbose:
         return not yes_is_default
@@ -248,20 +241,21 @@ def save_stats(path: str, player_board: Board, enemy_board: Board):
     with open(path, 'a') as f:
         f.write(f'{winner},{tries}\n')
 
-def save_db_stats(db: Data, player_board: Board, enemy_board: Board):
+def save_db_stats(db: Data, player_board: Board,
+                  enemy_board: Board, player_name: str = 'guest'):
     if player_board.health():
         winner_health = player_board.health()
-        winner = 'guest'
+        winner = player_name
         loser = 'enemy'
         winner_tries = enemy_board.shots_fired()
         loser_tries = player_board.shots_fired()
     else:
         winner_health = enemy_board.health()
         winner = 'enemy'
-        loser = 'guest'
+        loser = player_name
         winner_tries = player_board.shots_fired()
         loser_tries = enemy_board.shots_fired()
-    db.add_game('guest', winner, loser,
+    db.add_game(player_name, winner, loser,
                 winner_tries, loser_tries, winner_health)
 
 def save_ship_placement(board: Board) -> bool:
@@ -289,12 +283,55 @@ def write_board_to_file(path: str, board: Board):
 
 def load_language(path):
     global language
-    with open(path, 'r') as f:
+    with open(path, 'r', encoding='utf-8') as f:
         language = json.load(f)
+
+def login_menu(db: Data):
+    for i, opt in enumerate(language["login menu"]):
+        print(f'{i+1}. {opt}')
+    u_input = input('> ')
+    if u_input not in ['1','2','3']:
+        print(language["not an option"])
+        return None
+    if u_input == '3':
+        return 'guest'
+    name = input(language["enter username"])
+    pw = getpass(prompt=language["enter password"]).encode('utf-8')
+    pw = hashlib.sha256(pw).hexdigest()
+    if u_input == '1':
+        exists = list(db.check_login(name, pw))[0][0]
+        if exists:
+            return name
+        print(language["wrong login"])
+        return None
+    if u_input == '2':
+        exists = list(db.check_login(name))[0][0]
+        if exists:
+            print(' '.join([language['user already exists'][0],
+                            name,
+                            language['user already exists'][1]]))
+            return None
+        db.add_player(name, pw)
+
+def print_welcome_message(data: Data, name):
+    count_wins = tuple(data.count_games(name, True))[0][0]
+    if count_wins < 1:
+        return
+    count_games = tuple(data.count_games(name))[0][0]
+    avg = tuple(data.avg_winner_shots(name))[0][0]
+    pair_msg = [f'{name}!\n', count_wins, count_games, avg]
+    for i, msg in enumerate(pair_msg):
+        print(f'{language["welcome message"][i]} {msg}', end=' ')
+    print()
 
 def main():
     data = Data('stats.db')
-    load_language('language/swedish.json')
+    load_language('language/english.json')
+
+    while not (name := login_menu(data)):
+        pass
+    print_welcome_message(data, name)
+
     player_board = Board(hp_str = language['hp'],
                          shots_str = language['shots'])
     enemy_board = Board(hide = True,
@@ -310,7 +347,7 @@ def main():
     bomb_phase(player_board, enemy_board)
     print_winner_message(player_board, enemy_board)
     save_stats('stats.csv', player_board, enemy_board)
-    save_db_stats(data, player_board, enemy_board)
+    save_db_stats(data, player_board, enemy_board, name)
     while save_ship_placement(player_board):
         pass
 

@@ -1,4 +1,11 @@
 {
+	"login menu":		["Login", "Register", "Play as guest"],
+	"not an option":	"You must pick one of the options",
+	"enter username":	"username: ",
+	"enter password":	"password: ",
+	"wrong login":		"Wrong username or password",
+	"user already exists":	["User", "already exists"],
+	"welcome message":	["Welcome","\nYou have won","out of","games, and your average number of tries in a winning game is"],
 	"save file exists":	"A save file exists\nDo you want to load and continue form this file?",
 	"load ship placement": 	"Do you want to load ship placement from file?",
 	"save ship placement": 	"Do you want to save your ship placements?",

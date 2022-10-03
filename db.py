@@ -67,14 +67,40 @@ class Data:
                   winner_surviving_ships)
         self._execute(s, values)
 
-    def count_games(self):
+    def count_games(self, player = None, only_won_games = False):
         s = f'''
             SELECT COUNT(*) FROM {self._game_table}
             '''
+        if player is not None:
+            s += f'WHERE winner = "{player}" '
+        if not only_won_games:
+            s += f'OR loser = "{player}"'
+        return self._execute(s)
+
+    def avg_winner_shots(self, player = None):
+        s = f'''
+            SELECT AVG(winner_shots) FROM {self._game_table}
+            '''
+        if player is not None:
+            s+= f'WHERE winner = "{player}"'
+        return self._execute(s)
+
+    def check_login(self, player, pw = None):
+        s = f'''
+            SELECT COUNT(*) FROM {self._player_table} WHERE name = "{player}"
+            '''
+        if pw is not None:
+            s+= f'AND pw = "{pw}"'
         return self._execute(s)
 
 if __name__ == '__main__':
     data = Data('stats.db')
-    count = tuple(data.count_games())[0][0]
+    name = input('username: ')
+    from getpass import getpass
+    pw = hash(getpass())
+    data.add_player(name, pw)
+    count = tuple(data.count_games(name))[0][0]
     print(count)
+    avg = tuple(data.avg_winner_shots(name))[0][0]
+    print(avg)
 

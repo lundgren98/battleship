@@ -1,4 +1,11 @@
 {
+	"login menu":		["Logga in", "Registrera användare", "Spela som gäst"],
+	"not an option":	"Du måste välja ett av alternativen",
+	"enter username":	"användarnamn: ",
+	"enter password":	"lösenord: ",
+	"wrong login":		"Fel användarnamn eller lösenord",
+	"user already exists":	["Användaren", "finns redan"],
+	"welcome message":	["Välkommen,","\nDu har vunnit","utav","partier, ditt genomsnittliga antal försök på vunna matcher är"],
 	"save file exists":	"En sparfil finns redan.\nVill du ladda och fortsätta från denna fil?",
 	"load ship placement": 	"Vill du ladda skeppsplacering från en fil?",
 	"save ship placement": 	"Vill du spara din skeppsplacering?",
