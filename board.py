@@ -1,3 +1,9 @@
+try:
+    from termcolor import colored
+    USE_COLORS = True
+except ModuleNotFoundError:
+    USE_COLORS = False
+
 class Ship:
     def __init__(self, position, direction, length):
         self.position = position
@@ -96,7 +102,14 @@ class Board:
         return shots
 
     def __str__(self):
-        display_state = ".O#X"
+        if USE_COLORS:
+            display_state = [colored('.','blue'),
+                             'O',
+                             colored('#','green'),
+                             colored('X','red'),
+                             ]
+        else:
+            display_state = ".O#X"
         # text to show to the right of the board
         text = [f'{self._hp_str}: {self.health()}',
                 f'{self._shots_str}: {self.shots_fired()}',

@@ -5,3 +5,4 @@ Run `menu.py` with python
 #### Requirements
 
 * python 3.10
+* termcolor (optional)

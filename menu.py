@@ -206,8 +206,8 @@ def bomb_phase(player_board: Board, enemy_board: Board) -> int:
             print(err_msg)
         if player_turn:
             try:
-                player_turn = ai_shoot(enemy_board, not_hit_en) # Only for testing
-                #player_turn = player_shoot(player_board, enemy_board)
+                #player_turn = ai_shoot(enemy_board, not_hit_en) # Only for testing
+                player_turn = player_shoot(player_board, enemy_board)
             except ValueError:
                 err_msg = language['invalid cordinates']
             except IndexError:
