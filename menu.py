@@ -231,16 +231,6 @@ def print_winner_message(player_board: Board, enemy_board: Board):
                     str(loser_board.shots_fired()),
                     win_or_lose[1]]))
 
-def save_stats(path: str, player_board: Board, enemy_board: Board):
-    if player_board.health():
-        winner = 'you'
-        tries = enemy_board.shots_fired()
-    else:
-        winner = 'enemy'
-        tries = player_board.shots_fired()
-    with open(path, 'a') as f:
-        f.write(f'{winner},{tries}\n')
-
 def save_db_stats(db: Data, player_board: Board,
                   enemy_board: Board, player_name: str = 'guest'):
     if player_board.health():
@@ -346,7 +336,6 @@ def main():
             pass
     bomb_phase(player_board, enemy_board)
     print_winner_message(player_board, enemy_board)
-    save_stats('stats.csv', player_board, enemy_board)
     save_db_stats(data, player_board, enemy_board, name)
     while save_ship_placement(player_board):
         pass
