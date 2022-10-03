@@ -45,7 +45,7 @@ def player_shoot(player_board: Board, enemy_board: Board) -> bool:
         enemy_board.info_text.append(language['save text'])
         # Exploiting the fact that a hit means you can shoot again
         return True
-    x, y = u_input.split(' ')
+    y, x = u_input.split(' ')
     x = int(x)
     y = int(y)
     if x < 0 or y < 0:
@@ -111,7 +111,7 @@ def pick_cordinates(ship_list: list,
             print(err_msg)
         try:
             u_input = input(f'{language["enter cordinates"]}\n> ')
-            x, y = u_input.split(' ')
+            y, x = u_input.split(' ')
             cordinates = (int(x), int(y))
         except ValueError:
             err_msg = language['invalid cordinates']
@@ -186,8 +186,8 @@ def place_phase(player_board: Board, enemy_board: Board) -> bool:
                 player_board):
             return True
     else:
-        auto_placement(player_board) # Only for testing
-        #manual_placement(player_board, enemy_board)
+        #auto_placement(player_board) # Only for testing
+        manual_placement(player_board, enemy_board)
     auto_placement(enemy_board)
     return False
 
