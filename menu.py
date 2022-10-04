@@ -34,7 +34,7 @@ def yes_no_input(message: str, yes_is_default: bool = True) -> bool:
     return yes_is_default
 
 def print_boards(top_board: Board, bottom_board: Board):
-    os.system('clear')
+    os.system('cls' if os.name == 'nt' else 'clear')
     print(top_board)
     print(bottom_board)
 
