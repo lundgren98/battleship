@@ -11,8 +11,10 @@ import json
 SAVE_DIR = 'save_data'
 PLAYER_SAVE_FILE = f'{SAVE_DIR}/player_board.csv'
 ENEMY_SAVE_FILE = f'{SAVE_DIR}/enemy_board.csv'
+MOVES_SAVE_FILE = f'{SAVE_DIR}/moves.json'
 
 language = None
+moves = []
 
 def yes_no_input(message: str, yes_is_default: bool = True) -> bool:
     """Prompt the user a yes or no question.
@@ -40,6 +42,7 @@ def player_shoot(player_board: Board, enemy_board: Board) -> bool:
     if u_input.upper() == language['save']:
         if not os.path.exists(SAVE_DIR):
             os.makedirs(SAVE_DIR)
+        save_moves(MOVES_SAVE_FILE)
         write_board_to_file(PLAYER_SAVE_FILE, player_board.board)
         write_board_to_file(ENEMY_SAVE_FILE, enemy_board.board)
         enemy_board.info_text.append(language['save text'])
@@ -50,7 +53,10 @@ def player_shoot(player_board: Board, enemy_board: Board) -> bool:
     y = int(y)
     if x < 0 or y < 0:
         raise IndexError
-    return enemy_board.shoot(x, y)
+    r = enemy_board.shoot(x, y)
+    global moves
+    moves.append((x,y))
+    return r
 
 def ai_shoot(board: Board, not_hit: list[tuple[int,int]]) -> bool:
     x, y = choice(not_hit)
@@ -61,6 +67,8 @@ def ai_shoot(board: Board, not_hit: list[tuple[int,int]]) -> bool:
     free_space = board.h - len(board.info_text) - 3
     if free_space < 0:
         del board.info_text[:-free_space]
+    global moves
+    moves.append((x,y))
     return hit
 
 def pick_ship(ship_list: list[int],
@@ -191,6 +199,23 @@ def place_phase(player_board: Board, enemy_board: Board) -> bool:
     auto_placement(enemy_board)
     return False
 
+def show_replay(path: str):
+    player_board = Board()
+    enemy_board = Board()
+    load_moves(f'{path}/moves.json')
+    place_from_file(f'{path}/player_ships.csv', player_board)
+    place_from_file(f'{path}/enemy_ships.csv', enemy_board)
+    player_turn = True
+    for cordinates in moves:
+        print_boards(player_board, enemy_board)
+        sleep(0.2)
+        if player_turn:
+            player_turn = player_board.shoot(*(cordinates))
+        else:
+            player_turn = not enemy_board.shoot(*(cordinates))
+    print_boards(player_board, enemy_board)
+    exit()
+
 def bomb_phase(player_board: Board, enemy_board: Board) -> int:
     """Run the bomb phase of the game.
     Returns how many of the player's ship spaces has not been hit."""
@@ -206,8 +231,8 @@ def bomb_phase(player_board: Board, enemy_board: Board) -> int:
             print(err_msg)
         if player_turn:
             try:
-                #player_turn = ai_shoot(enemy_board, not_hit_en) # Only for testing
-                player_turn = player_shoot(player_board, enemy_board)
+                player_turn = ai_shoot(enemy_board, not_hit_en) # Only for testing
+                #player_turn = player_shoot(player_board, enemy_board)
             except ValueError:
                 err_msg = language['invalid cordinates']
             except IndexError:
@@ -266,10 +291,30 @@ def save_ship_placement(board: Board) -> bool:
     write_board_to_file(path, ships)
     return False
 
+def save_moves(path: str):
+    with open(path, 'w') as f:
+        json.dump(moves, f)
+
 def write_board_to_file(path: str, board: Board):
     with open(path, 'w') as f:
         for row in board:
             f.write(','.join(map(str, row)) + '\n')
+
+def save_replay(db: Data, player_board: Board, enemy_board: Board):
+    game_id = tuple(db.max_game_id())[0][0]
+    player_ships = [[v & Board.SHIP for v in row] for row in player_board.board]
+    enemy_ships = [[v & Board.SHIP for v in row] for row in enemy_board.board]
+    directory = f'{SAVE_DIR}/{game_id}'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    save_moves(f'{directory}/moves.json')
+    write_board_to_file(f'{directory}/player_ships.csv', player_ships)
+    write_board_to_file(f'{directory}/enemy_ships.csv', enemy_ships)
+
+def load_moves(path: str):
+    global moves
+    with open(path, 'r') as f:
+        moves = json.load(f)
 
 def load_language(path):
     global language
@@ -280,9 +325,12 @@ def login_menu(db: Data):
     for i, opt in enumerate(language["login menu"]):
         print(f'{i+1}. {opt}')
     u_input = input('> ')
-    if u_input not in ['1','2','3']:
+    if u_input not in ['1','2','3','4']:
         print(language["not an option"])
         return None
+    if u_input == '4':
+        game_id = tuple(db.max_game_id())[0][0]
+        show_replay(f'{SAVE_DIR}/{game_id}')
     if u_input == '3':
         return 'guest'
     name = input(language["enter username"])
@@ -314,6 +362,7 @@ def print_welcome_message(data: Data, name):
         print(f'{language["welcome message"][i]} {msg}', end=' ')
     print()
 
+
 def main():
     data = Data('stats.db')
     load_language('language/english.json')
@@ -329,6 +378,7 @@ def main():
                         shots_str = language['shots'])
     if os.path.exists(PLAYER_SAVE_FILE) and os.path.exists(ENEMY_SAVE_FILE) \
             and yes_no_input(language['save file exists']):
+        load_moves(MOVES_SAVE_FILE)
         place_from_file(PLAYER_SAVE_FILE, player_board)
         place_from_file(ENEMY_SAVE_FILE, enemy_board)
     else:
@@ -337,6 +387,7 @@ def main():
     bomb_phase(player_board, enemy_board)
     print_winner_message(player_board, enemy_board)
     save_db_stats(data, player_board, enemy_board, name)
+    save_replay(data, player_board, enemy_board)
     while save_ship_placement(player_board):
         pass
 

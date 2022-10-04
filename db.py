@@ -77,6 +77,12 @@ class Data:
             s += f'OR loser = "{player}"'
         return self._execute(s)
 
+    def max_game_id(self):
+        s = f'''
+            SELECT max(id) FROM {self._game_table}
+            '''
+        return self._execute(s)
+
     def avg_winner_shots(self, player = None):
         s = f'''
             SELECT AVG(winner_shots) FROM {self._game_table}
