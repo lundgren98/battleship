@@ -424,7 +424,10 @@ def print_welcome_message(data: Data, name):
 
 def main():
     data = Data('stats.db')
-    load_language('language/english.json')
+    if os.path.exists('language/default.json'):
+        load_language('language/default.json')
+    else:
+        load_language('language/english.json')
 
     while not (name := login_menu(data)):
         pass
