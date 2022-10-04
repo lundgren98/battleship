@@ -211,25 +211,36 @@ def place_phase(player_board: Board, enemy_board: Board) -> bool:
     return False
 
 def show_replay(path: str):
-    player_board = Board()
-    enemy_board = Board()
+    player_board = Board(hp_str = language['hp'],
+                         shots_str = language['shots'])
+    enemy_board = Board(hp_str = language['hp'],
+                         shots_str = language['shots'])
     load_moves(f'{path}/moves.json')
     place_from_file(f'{path}/player_ships.csv', player_board)
     place_from_file(f'{path}/enemy_ships.csv', enemy_board)
     player_turn = True
+    enemy_board.info_text = [language["press any key"]] if READCHAR \
+            else [language["press enter"]]
     for cordinates in moves:
         print_boards(player_board, enemy_board)
         if READCHAR:
-            print('Press any key to continue')
             readkey()
         else:
-            input('Press enter to continue')
+            input()
         if player_turn:
             player_turn = enemy_board.shoot(*(cordinates))
+            hit_str = language['you hit'] if player_turn \
+                    else language['you miss']
         else:
             player_turn = not player_board.shoot(*(cordinates))
+            hit_str = language['miss'] if player_turn \
+                    else language['hit']
+        player_board.info_text.append(
+                f'{hit_str} {" ".join([str(v) for v in cordinates])}')
+        free_space = player_board.h - len(player_board.info_text) - 3
+        if free_space < 0:
+            del player_board.info_text[:-free_space]
     print_boards(player_board, enemy_board)
-    print('Press any key to continue')
     exit()
 
 def bomb_phase(player_board: Board, enemy_board: Board) -> int:
