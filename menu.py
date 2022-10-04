@@ -4,6 +4,11 @@ from getpass import getpass
 import hashlib
 from random import randint, choice
 from time import sleep
+try:
+    from tabulate import tabulate
+    TABULATE = True
+except ModuleNotFoundError:
+    TABULATE = False
 import os
 import csv
 import json
@@ -321,16 +326,48 @@ def load_language(path):
     with open(path, 'r', encoding='utf-8') as f:
         language = json.load(f)
 
+def replay_menu(db: Data, name: str = 'guest'):
+    if not yes_no_input(language["show replay"], False):
+        return False
+    table = db.list_games(name)
+    headers = language['table title']
+    if TABULATE:
+        print(tabulate(table, headers=headers))
+    else:
+        just = [4,10,10,10,10,11,10]
+        s = [w.ljust(just[i]) for i, w in enumerate(headers)]
+        print(''.join(s))
+        print('-'*sum(just))
+        for row in table:
+            s = ''
+            for i, item in enumerate(row):
+                s += str(item).ljust(just[i])
+            print(s)
+    print(language["enter game id"])
+    u_input = input('> ').upper()
+    if u_input == language["dir"]:
+        print(language["enter replay dir"], end='')
+        replay_dir = input(': ')
+    else:
+        try:
+            num = int(u_input)
+        except ValueError:
+            print(language["not an option"])
+            return True
+        replay_dir = f'{SAVE_DIR}/{num}'
+    try:
+        show_replay(replay_dir)
+    except FileNotFoundError:
+        print(language["no file"])
+        return True
+
 def login_menu(db: Data):
     for i, opt in enumerate(language["login menu"]):
         print(f'{i+1}. {opt}')
     u_input = input('> ')
-    if u_input not in ['1','2','3','4']:
+    if u_input not in ['1','2','3']:
         print(language["not an option"])
         return None
-    if u_input == '4':
-        game_id = tuple(db.max_game_id())[0][0]
-        show_replay(f'{SAVE_DIR}/{game_id}')
     if u_input == '3':
         return 'guest'
     name = input(language["enter username"])
@@ -370,6 +407,8 @@ def main():
     while not (name := login_menu(data)):
         pass
     print_welcome_message(data, name)
+    while replay_menu(data, name):
+        pass
 
     player_board = Board(hp_str = language['hp'],
                          shots_str = language['shots'])

@@ -67,6 +67,14 @@ class Data:
                   winner_surviving_ships)
         self._execute(s, values)
 
+    def list_games(self, player = None):
+        s = f'''
+            SELECT * FROM {self._game_table}
+            '''
+        if player is not None:
+            s += f'WHERE winner = "{player}" OR loser = "{player}"'
+        return self._execute(s)
+
     def count_games(self, player = None, only_won_games = False):
         s = f'''
             SELECT COUNT(*) FROM {self._game_table}
