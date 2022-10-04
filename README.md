@@ -5,4 +5,8 @@ Run `menu.py` with python
 #### Requirements
 
 * python 3.10
-* termcolor (optional)
+
+#### Optional requrements
+
+* termcolor (color support)
+* tabulate (nicer looking tables)
