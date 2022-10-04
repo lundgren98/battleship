@@ -1,6 +1,6 @@
 ## How to play
 
-Run `menu.py` with python
+Run `main.py` with python
 
 #### Requirements
 
