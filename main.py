@@ -4,14 +4,20 @@ from getpass import getpass
 import hashlib
 from random import randint, choice
 from time import sleep
+import os
+import csv
+import json
+# Optional modules
 try:
     from tabulate import tabulate
     TABULATE = True
 except ModuleNotFoundError:
     TABULATE = False
-import os
-import csv
-import json
+try:
+    from readchar import readkey, key
+    READCHAR = True
+except ModuleNotFoundError:
+    READCHAR = False
 
 SAVE_DIR = 'save_data'
 PLAYER_SAVE_FILE = f'{SAVE_DIR}/player_board.csv'
@@ -213,12 +219,17 @@ def show_replay(path: str):
     player_turn = True
     for cordinates in moves:
         print_boards(player_board, enemy_board)
-        sleep(0.2)
-        if player_turn:
-            player_turn = player_board.shoot(*(cordinates))
+        if READCHAR:
+            print('Press any key to continue')
+            readkey()
         else:
-            player_turn = not enemy_board.shoot(*(cordinates))
+            input('Press enter to continue')
+        if player_turn:
+            player_turn = enemy_board.shoot(*(cordinates))
+        else:
+            player_turn = not player_board.shoot(*(cordinates))
     print_boards(player_board, enemy_board)
+    print('Press any key to continue')
     exit()
 
 def bomb_phase(player_board: Board, enemy_board: Board) -> int:
