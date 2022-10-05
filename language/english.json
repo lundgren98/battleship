@@ -15,6 +15,7 @@
 	"press enter":		"Press enter to continue",
 	"save file exists":	"A save file exists\nDo you want to load and continue form this file?",
 	"load ship placement": 	"Do you want to load ship placement from file?",
+	"placing ships": 	"Placing ships, this may take a while",
 	"save ship placement": 	"Do you want to save your ship placements?",
 	"file to read": 	"File to read",
 	"file to write": 	"File to write",

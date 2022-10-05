@@ -15,6 +15,7 @@
 	"press enter":		"Tryck på enter-knappen för att fortsätta",
 	"save file exists":	"En sparfil finns redan.\nVill du ladda och fortsätta från denna fil?",
 	"load ship placement": 	"Vill du ladda skeppsplacering från en fil?",
+	"placing ships": 	"Sjösätter skepp. Detta kan ta lite tid...",
 	"save ship placement": 	"Vill du spara din skeppsplacering?",
 	"file to read": 	"Fil att ladda från",
 	"file to write": 	"Fil att spara till",

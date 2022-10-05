@@ -171,7 +171,7 @@ def manual_placement(player_board: Board, enemy_board: Board):
                 err_msg = language['cannot place ship'] 
 
 def auto_placement(board: Board):
-    print('Placing ships, this may take a while.')
+    print(language["placing ships"])
     err_msg = None
     ship_list = [1, 1, 1, 1, 2, 2, 2, 3, 3, 4]
     while ship_list:
