@@ -4,6 +4,7 @@ from getpass import getpass
 import hashlib
 from random import randint, choice
 from time import sleep
+from datetime import datetime
 import os
 import csv
 import json
@@ -160,7 +161,7 @@ def manual_placement(player_board: Board, enemy_board: Board):
 def auto_placement(board: Board):
     print('Placing ships, this may take a while.')
     err_msg = None
-    ship_list = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
+    ship_list = [1, 1, 1, 1, 2, 2, 2, 3, 3, 4]
     while ship_list:
         ship_length = ship_list.pop()
         valid_cordinates = False
@@ -224,7 +225,9 @@ def show_replay(path: str):
     for cordinates in moves:
         print_boards(player_board, enemy_board)
         if READCHAR:
-            readkey()
+            k = readkey()
+            if k == 'q':
+                exit()
         else:
             input()
         if player_turn:
@@ -297,7 +300,8 @@ def save_db_stats(db: Data, player_board: Board,
         loser = player_name
         winner_tries = player_board.shots_fired()
         loser_tries = enemy_board.shots_fired()
-    db.add_game(player_name, winner, loser,
+    t = datetime.now().astimezone().isoformat(timespec='seconds')
+    db.add_game(t, player_name, winner, loser,
                 winner_tries, loser_tries, winner_health)
 
 def save_ship_placement(board: Board) -> bool:

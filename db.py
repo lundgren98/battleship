@@ -27,6 +27,7 @@ class Data:
         s = f'''
             CREATE TABLE IF NOT EXISTS {self._game_table}(
                 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                date_time DATETIME,
                 first_move TEXT,
                 winner TEXT,
                 loser TEXT,
@@ -46,12 +47,13 @@ class Data:
             '''
         self._execute(s, (name, pw))
 
-    def add_game(self, first_move: str,
+    def add_game(self, date_time: str, first_move: str,
                  winner: str, loser: str,
                  winner_shots: int, loser_shots: int,
                  winner_surviving_ships: int):
         s = f'''
             INSERT INTO {self._game_table}(
+                date_time,
                 first_move,
                 winner,
                 loser,
@@ -59,9 +61,10 @@ class Data:
                 loser_shots,
                 winner_surviving_ships
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             '''
-        values = (first_move,
+        values = (date_time,
+                  first_move,
                   winner, loser,
                   winner_shots, loser_shots,
                   winner_surviving_ships)
