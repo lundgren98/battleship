@@ -45,6 +45,7 @@ def print_boards(top_board: Board, bottom_board: Board):
     print(top_board)
     print(bottom_board)
 
+### SHOOTING
 def player_shoot(player_board: Board, enemy_board: Board) -> bool:
     """Prompt the player to shoot at enemy board.
     Returns a bool indicating if it hit a ship and should be run again."""
@@ -98,6 +99,39 @@ def ai_shoot(board: Board,
     moves.append((x,y))
     return hit
 
+def bomb_phase(player_board: Board, enemy_board: Board) -> int:
+    """Run the bomb phase of the game.
+    Returns how many of the player's ship spaces has not been hit."""
+    global moves
+    player_turn = True
+    not_hit_pl = [(x,y) for x in range(10) for y in range(10)]
+    ai_last_hit = None
+    err_msg = None
+    enemy_board.info_text = language['help text']
+    # Game continues until either runs out of health
+    while player_board.health() and enemy_board.health():
+        print_boards(player_board, enemy_board)
+        if err_msg:
+            print(err_msg)
+        if player_turn:
+            try:
+                player_turn = player_shoot(player_board, enemy_board)
+            except ValueError:
+                err_msg = language['invalid cordinates']
+            except IndexError:
+                err_msg = language['out of bound cordinates']
+            else:
+                del player_board.info_text[:]
+                err_msg = None
+        else:
+            ai_hit = ai_shoot(player_board, not_hit_pl, ai_last_hit)
+            if ai_hit:
+                ai_last_hit = moves[-1]
+            player_turn = not ai_hit
+    print_boards(player_board, enemy_board)
+    return player_board.health()
+
+### SHIP PLACEMENT
 def pick_ship(ship_list: list[int],
               top_board: Board,
               bottom_board: Board
@@ -223,8 +257,8 @@ def place_from_file(path: str, board: Board):
 def place_phase(player_board: Board, enemy_board: Board) -> bool:
     """Returns a bool indicating if something went wrong."""
     if yes_no_input(language['load ship placement']):
+        print(language["file to read"], end='')
         if not place_from_file(
-                print(language["file to read"], end='')
                 input(': '),
                 player_board):
             return True
@@ -233,6 +267,26 @@ def place_phase(player_board: Board, enemy_board: Board) -> bool:
     auto_placement(enemy_board)
     return False
 
+def save_ship_placement(board: Board) -> bool:
+    """Promts the user to save the board's ship placements.
+    Returns a bool indicating if something went wrong."""
+    if not yes_no_input(language['save ship placement']):
+        return False
+    print(language["file to write"], end='')
+    path = input(': ')
+    if os.path.exists(path):
+        file_already_exists = ' '.join(
+                [language['file already exists'][0],
+                 path,
+                 language['file already exists'][1]])
+        if not yes_no_input(file_already_exists, False):
+            return True
+    #         Check for ships only
+    ships = [[v & Board.SHIP for v in row] for row in board.board]
+    write_board_to_file(path, ships)
+    return False
+
+### REPLAY
 def show_replay(path: str):
     player_board = Board(hp_str = language['hp'],
                          shots_str = language['shots'])
@@ -268,95 +322,6 @@ def show_replay(path: str):
     print_boards(player_board, enemy_board)
     exit()
 
-def bomb_phase(player_board: Board, enemy_board: Board) -> int:
-    """Run the bomb phase of the game.
-    Returns how many of the player's ship spaces has not been hit."""
-    global moves
-    player_turn = True 
-    not_hit_pl = [(x,y) for x in range(10) for y in range(10)]
-    ai_last_hit = None
-    err_msg = None
-    enemy_board.info_text = language['help text'] 
-    # Game continues until either runs out of health
-    while player_board.health() and enemy_board.health():
-        print_boards(player_board, enemy_board)
-        if err_msg:
-            print(err_msg)
-        if player_turn:
-            try:
-                player_turn = player_shoot(player_board, enemy_board)
-            except ValueError:
-                err_msg = language['invalid cordinates']
-            except IndexError:
-                err_msg = language['out of bound cordinates']
-            else:
-                del player_board.info_text[:]
-                err_msg = None
-        else:
-            ai_hit = ai_shoot(player_board, not_hit_pl, ai_last_hit)
-            if ai_hit:
-                ai_last_hit = moves[-1]
-            player_turn = not ai_hit
-    print_boards(player_board, enemy_board)
-    return player_board.health()
-
-def print_winner_message(player_board: Board, enemy_board: Board):
-    if player_board.health():
-        win_or_lose = language['win message']
-        loser_board = enemy_board
-    else:
-        win_or_lose = language['lose message']
-        loser_board = player_board
-    print(' '.join([win_or_lose[0],
-                    str(loser_board.shots_fired()),
-                    win_or_lose[1]]))
-
-def save_db_stats(db: Data, player_board: Board,
-                  enemy_board: Board, player_name: str = 'guest'):
-    if player_board.health():
-        winner_health = player_board.health()
-        winner = player_name
-        loser = 'enemy'
-        winner_tries = enemy_board.shots_fired()
-        loser_tries = player_board.shots_fired()
-    else:
-        winner_health = enemy_board.health()
-        winner = 'enemy'
-        loser = player_name
-        winner_tries = player_board.shots_fired()
-        loser_tries = enemy_board.shots_fired()
-    t = datetime.now().astimezone().isoformat(timespec='seconds')
-    db.add_game(t, player_name, winner, loser,
-                winner_tries, loser_tries, winner_health)
-
-def save_ship_placement(board: Board) -> bool:
-    """Promts the user to save the board's ship placements.
-    Returns a bool indicating if something went wrong."""
-    if not yes_no_input(language['save ship placement']):
-        return False
-    print(language["file to write"], end='')
-    path = input(': ')
-    if os.path.exists(path):
-        file_already_exists = ' '.join(
-                [language['file already exists'][0],
-                 path,
-                 language['file already exists'][1]])
-        if not yes_no_input(file_already_exists, False):
-            return True
-    #         Check for ships only
-    ships = [[v & Board.SHIP for v in row] for row in board.board]
-    write_board_to_file(path, ships)
-    return False
-
-def save_moves(path: str):
-    with open(path, 'w') as f:
-        json.dump(moves, f)
-
-def write_board_to_file(path: str, board: Board):
-    with open(path, 'w') as f:
-        for row in board:
-            f.write(','.join(map(str, row)) + '\n')
-
 def save_replay(db: Data, player_board: Board, enemy_board: Board):
     game_id = tuple(db.max_game_id())[0][0]
     player_ships = [[v & Board.SHIP for v in row] for row in player_board.board]
@@ -368,17 +333,7 @@ def save_replay(db: Data, player_board: Board, enemy_board: Board):
     write_board_to_file(f'{directory}/player_ships.csv', player_ships)
     write_board_to_file(f'{directory}/enemy_ships.csv', enemy_ships)
 
-def load_moves(path: str):
-    global moves
-    with open(path, 'r') as f:
-        moves = json.load(f)
-
-def load_language(path):
-    global language
-    with open(path, 'r', encoding='utf-8') as f:
-        language = json.load(f)
-
-def replay_menu(db: Data, name: str = 'guest') --> bool:
+def replay_menu(db: Data, name: str = 'guest') -> bool:
     """Lists the games name has played.
     User can either pick one of the games or a directory.
     Calls show_replay().
@@ -419,7 +374,45 @@ def replay_menu(db: Data, name: str = 'guest') --> bool:
         print(language["no file"])
         return True
 
-def login_menu(db: Data) --> None | str:
+def save_db_stats(db: Data, player_board: Board,
+                  enemy_board: Board, player_name: str = 'guest'):
+    if player_board.health():
+        winner_health = player_board.health()
+        winner = player_name
+        loser = 'enemy'
+        winner_tries = enemy_board.shots_fired()
+        loser_tries = player_board.shots_fired()
+    else:
+        winner_health = enemy_board.health()
+        winner = 'enemy'
+        loser = player_name
+        winner_tries = player_board.shots_fired()
+        loser_tries = enemy_board.shots_fired()
+    t = datetime.now().astimezone().isoformat(timespec='seconds')
+    db.add_game(t, player_name, winner, loser,
+                winner_tries, loser_tries, winner_health)
+
+### MOVES
+def save_moves(path: str):
+    with open(path, 'w') as f:
+        json.dump(moves, f)
+
+def load_moves(path: str):
+    global moves
+    with open(path, 'r') as f:
+        moves = json.load(f)
+
+def write_board_to_file(path: str, board: Board):
+    with open(path, 'w') as f:
+        for row in board:
+            f.write(','.join(map(str, row)) + '\n')
+
+def load_language(path):
+    global language
+    with open(path, 'r', encoding='utf-8') as f:
+        language = json.load(f)
+
+def login_menu(db: Data) -> None | str:
     """Promts the user to login or register.
     Returns the name of the user on success,
     and None on failure."""
@@ -453,6 +446,18 @@ def login_menu(db: Data) --> None | str:
                             language['user already exists'][1]]))
             return None
         db.add_player(name, pw)
+
+### PRINT MESSAGES
+def print_winner_message(player_board: Board, enemy_board: Board):
+    if player_board.health():
+        win_or_lose = language['win message']
+        loser_board = enemy_board
+    else:
+        win_or_lose = language['lose message']
+        loser_board = player_board
+    print(' '.join([win_or_lose[0],
+                    str(loser_board.shots_fired()),
+                    win_or_lose[1]]))
 
 def print_welcome_message(data: Data, name):
     count_wins = tuple(data.count_games(name, True))[0][0]
