@@ -10,6 +10,7 @@ Run `main.py` with python
 
 * termcolor (color support)
 * tabulate (nicer looking tables)
+* readchar (press any key when viewing replays)
 
 ### How do change language
 
