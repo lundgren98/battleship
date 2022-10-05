@@ -65,16 +65,17 @@ def player_shoot(player_board: Board, enemy_board: Board) -> bool:
     y = int(y)
     if x < 0 or y < 0:
         raise IndexError
-    r = enemy_board.shoot(x, y)
+    hit = enemy_board.shoot(x, y)
     global moves
     moves.append((x,y))
-    return r
+    return hit
 
 def ai_shoot(board: Board,
              not_hit: list[tuple[int,int]],
              last_hit: tuple[int,int] | None = None
              ) -> bool:
     aim = None
+    # aim near last hit
     if last_hit is not None:
         lx, ly = last_hit
         aim = list(set(not_hit).intersection({
@@ -86,11 +87,13 @@ def ai_shoot(board: Board,
     x, y = choice(aim if aim else not_hit)
     not_hit.remove((x, y))
     hit = board.shoot(x, y)
+    # Anounce the shot
     hit_str = language['hit'] if hit else language['miss']
     board.info_text.append(f'{hit_str} {x} {y}')
     free_space = board.h - len(board.info_text) - 3
     if free_space < 0:
         del board.info_text[:-free_space]
+    # add the shot to history
     global moves
     moves.append((x,y))
     return hit
@@ -99,6 +102,10 @@ def pick_ship(ship_list: list[int],
               top_board: Board,
               bottom_board: Board
               ) -> int:
+    """Lists the ships in ship_list and prompts the user
+    to pick one in the list.
+    Returns the ship from ship_list which user picked
+    and removes it from ship_list."""
     valid_index = False
     err_msg = None
     ship_index = None
@@ -110,7 +117,8 @@ def pick_ship(ship_list: list[int],
         if err_msg:
             print(err_msg)
         try:
-            ship_index = int(input(f'{language["enter ship"]}\n> ')) - 1
+            print(language["enter ship"])
+            ship_index = int(input('> ')) - 1
             if ship_index < 0:
                 raise IndexError
             ship_length = ship_list[ship_index]
@@ -127,7 +135,8 @@ def pick_direction(top_board: Board, bottom_board: Board) -> str:
         print_boards(top_board, bottom_board)
         if direction is not None:
             print(language['invalid direction'])
-        direction = input(f'{language["enter direction"]}\n> ').upper()
+        print(language["enter direction"])
+        direction = input('> ').upper()
     return direction
 
 def pick_cordinates(ship_list: list,
@@ -142,7 +151,8 @@ def pick_cordinates(ship_list: list,
         if err_msg:
             print(err_msg)
         try:
-            u_input = input(f'{language["enter cordinates"]}\n> ')
+            print(language["enter cordinates"])
+            u_input = input('> ')
             y, x = u_input.split(' ')
             cordinates = (int(x), int(y))
         except ValueError:
@@ -214,11 +224,11 @@ def place_phase(player_board: Board, enemy_board: Board) -> bool:
     """Returns a bool indicating if something went wrong."""
     if yes_no_input(language['load ship placement']):
         if not place_from_file(
-                input(f'{language["file to read"]}: '),
+                print(language["file to read"], end='')
+                input(': '),
                 player_board):
             return True
     else:
-        #auto_placement(player_board) # Only for testing
         manual_placement(player_board, enemy_board)
     auto_placement(enemy_board)
     return False
@@ -264,7 +274,6 @@ def bomb_phase(player_board: Board, enemy_board: Board) -> int:
     global moves
     player_turn = True 
     not_hit_pl = [(x,y) for x in range(10) for y in range(10)]
-    not_hit_en = [(x,y) for x in range(10) for y in range(10)]
     ai_last_hit = None
     err_msg = None
     enemy_board.info_text = language['help text'] 
@@ -275,7 +284,6 @@ def bomb_phase(player_board: Board, enemy_board: Board) -> int:
             print(err_msg)
         if player_turn:
             try:
-                #player_turn = ai_shoot(enemy_board, not_hit_en) # Only for testing
                 player_turn = player_shoot(player_board, enemy_board)
             except ValueError:
                 err_msg = language['invalid cordinates']
@@ -326,7 +334,8 @@ def save_ship_placement(board: Board) -> bool:
     Returns a bool indicating if something went wrong."""
     if not yes_no_input(language['save ship placement']):
         return False
-    path = input(f'{language["file to write"]}: ')
+    print(language["file to write"], end='')
+    path = input(': ')
     if os.path.exists(path):
         file_already_exists = ' '.join(
                 [language['file already exists'][0],
@@ -369,7 +378,11 @@ def load_language(path):
     with open(path, 'r', encoding='utf-8') as f:
         language = json.load(f)
 
-def replay_menu(db: Data, name: str = 'guest'):
+def replay_menu(db: Data, name: str = 'guest') --> bool:
+    """Lists the games name has played.
+    User can either pick one of the games or a directory.
+    Calls show_replay().
+    Returns a bool indicating if it should be run again."""
     if not yes_no_input(language["show replay"], False):
         return False
     table = db.list_games(name)
@@ -377,6 +390,8 @@ def replay_menu(db: Data, name: str = 'guest'):
     if TABULATE:
         print(tabulate(table, headers=headers))
     else:
+        # Not a great fix.
+        # Ideally just should be based on the max len of vals in each col
         just = [4,27,10,10,10,10,11,10]
         s = [w.ljust(just[i]) for i, w in enumerate(headers)]
         print(''.join(s))
@@ -404,24 +419,32 @@ def replay_menu(db: Data, name: str = 'guest'):
         print(language["no file"])
         return True
 
-def login_menu(db: Data):
+def login_menu(db: Data) --> None | str:
+    """Promts the user to login or register.
+    Returns the name of the user on success,
+    and None on failure."""
     for i, opt in enumerate(language["login menu"]):
         print(f'{i+1}. {opt}')
     u_input = input('> ')
     if u_input not in ['1','2','3']:
         print(language["not an option"])
         return None
+    # Play as guest
     if u_input == '3':
         return 'guest'
     name = input(language["enter username"])
     pw = getpass(prompt=language["enter password"]).encode('utf-8')
     pw = hashlib.sha256(pw).hexdigest()
+    # Login
     if u_input == '1':
+        # The return value of Data.check_login() is not subscribable
+        # Putting it in a list casts it to a singleton, which is.
         exists = list(db.check_login(name, pw))[0][0]
         if exists:
             return name
         print(language["wrong login"])
         return None
+    # Register
     if u_input == '2':
         exists = list(db.check_login(name))[0][0]
         if exists:
