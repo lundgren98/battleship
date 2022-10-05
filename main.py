@@ -47,7 +47,7 @@ def print_boards(top_board: Board, bottom_board: Board):
 
 def player_shoot(player_board: Board, enemy_board: Board) -> bool:
     """Prompt the player to shoot at enemy board.
-    Returns a bool indicating if it hit a ship or not."""
+    Returns a bool indicating if it hit a ship and should be run again."""
     u_input = input(f'{language["where to shoot"]}\n> ')
     if u_input.upper() == language['quit']:
         exit()
@@ -58,7 +58,7 @@ def player_shoot(player_board: Board, enemy_board: Board) -> bool:
         write_board_to_file(PLAYER_SAVE_FILE, player_board.board)
         write_board_to_file(ENEMY_SAVE_FILE, enemy_board.board)
         enemy_board.info_text.append(language['save text'])
-        # Exploiting the fact that a hit means you can shoot again
+        # Didn't hit a ship, but we want to run again
         return True
     y, x = u_input.split(' ')
     x = int(x)
@@ -275,8 +275,8 @@ def bomb_phase(player_board: Board, enemy_board: Board) -> int:
             print(err_msg)
         if player_turn:
             try:
-                player_turn = ai_shoot(enemy_board, not_hit_en) # Only for testing
-                #player_turn = player_shoot(player_board, enemy_board)
+                #player_turn = ai_shoot(enemy_board, not_hit_en) # Only for testing
+                player_turn = player_shoot(player_board, enemy_board)
             except ValueError:
                 err_msg = language['invalid cordinates']
             except IndexError:
