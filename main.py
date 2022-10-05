@@ -70,8 +70,20 @@ def player_shoot(player_board: Board, enemy_board: Board) -> bool:
     moves.append((x,y))
     return r
 
-def ai_shoot(board: Board, not_hit: list[tuple[int,int]]) -> bool:
-    x, y = choice(not_hit)
+def ai_shoot(board: Board,
+             not_hit: list[tuple[int,int]],
+             last_hit: tuple[int,int] | None = None
+             ) -> bool:
+    aim = None
+    if last_hit is not None:
+        lx, ly = last_hit
+        aim = list(set(not_hit).intersection({
+            (lx - 1,ly),
+            (lx + 1,ly),
+            (lx,ly - 1),
+            (lx,ly + 1)
+            }))
+    x, y = choice(aim if aim else not_hit)
     not_hit.remove((x, y))
     hit = board.shoot(x, y)
     hit_str = language['hit'] if hit else language['miss']
@@ -249,9 +261,11 @@ def show_replay(path: str):
 def bomb_phase(player_board: Board, enemy_board: Board) -> int:
     """Run the bomb phase of the game.
     Returns how many of the player's ship spaces has not been hit."""
+    global moves
     player_turn = True 
     not_hit_pl = [(x,y) for x in range(10) for y in range(10)]
     not_hit_en = [(x,y) for x in range(10) for y in range(10)]
+    ai_last_hit = None
     err_msg = None
     enemy_board.info_text = language['help text'] 
     # Game continues until either runs out of health
@@ -271,7 +285,10 @@ def bomb_phase(player_board: Board, enemy_board: Board) -> int:
                 del player_board.info_text[:]
                 err_msg = None
         else:
-            player_turn = not ai_shoot(player_board, not_hit_pl)
+            ai_hit = ai_shoot(player_board, not_hit_pl, ai_last_hit)
+            if ai_hit:
+                ai_last_hit = moves[-1]
+            player_turn = not ai_hit
     print_boards(player_board, enemy_board)
     return player_board.health()
 
