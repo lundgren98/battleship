@@ -377,7 +377,7 @@ def replay_menu(db: Data, name: str = 'guest'):
     if TABULATE:
         print(tabulate(table, headers=headers))
     else:
-        just = [4,10,10,10,10,11,10]
+        just = [4,27,10,10,10,10,11,10]
         s = [w.ljust(just[i]) for i, w in enumerate(headers)]
         print(''.join(s))
         print('-'*sum(just))
