@@ -21,9 +21,9 @@ except ModuleNotFoundError:
     READCHAR = False
 
 SAVE_DIR = 'save_data'
-PLAYER_SAVE_FILE = f'{SAVE_DIR}/player_board.csv'
-ENEMY_SAVE_FILE = f'{SAVE_DIR}/enemy_board.csv'
-MOVES_SAVE_FILE = f'{SAVE_DIR}/moves.json'
+PLAYER_BOARD_FILE = f'player_board.csv'
+ENEMY_BOARD_FILE = f'enemy_board.csv'
+MOVES_FILE = f'moves.json'
 
 language = None
 moves = []
@@ -53,11 +53,8 @@ def player_shoot(player_board: Board, enemy_board: Board) -> bool:
     if u_input.upper() == language['quit']:
         exit()
     if u_input.upper() == language['save']:
-        if not os.path.exists(SAVE_DIR):
-            os.makedirs(SAVE_DIR)
-        save_moves(MOVES_SAVE_FILE)
-        write_board_to_file(PLAYER_SAVE_FILE, player_board.board)
-        write_board_to_file(ENEMY_SAVE_FILE, enemy_board.board)
+        save_game(player_board.board,
+                  enemy_board.board)
         enemy_board.info_text.append(language['save text'])
         # Didn't hit a ship, but we want to run again
         return True
@@ -292,9 +289,9 @@ def show_replay(path: str):
                          shots_str = language['shots'])
     enemy_board = Board(hp_str = language['hp'],
                          shots_str = language['shots'])
-    load_moves(f'{path}/moves.json')
-    place_from_file(f'{path}/player_ships.csv', player_board)
-    place_from_file(f'{path}/enemy_ships.csv', enemy_board)
+    load_moves(f'{path}/{MOVES_FILE}')
+    place_from_file(f'{path}/{PLAYER_BOARD_FILE}', player_board)
+    place_from_file(f'{path}/{ENEMY_BOARD_FILE}', enemy_board)
     player_turn = True
     enemy_board.info_text = [language["press any key"]] if READCHAR \
             else [language["press enter"]]
@@ -327,11 +324,7 @@ def save_replay(db: Data, player_board: Board, enemy_board: Board):
     player_ships = [[v & Board.SHIP for v in row] for row in player_board.board]
     enemy_ships = [[v & Board.SHIP for v in row] for row in enemy_board.board]
     directory = f'{SAVE_DIR}/{game_id}'
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    save_moves(f'{directory}/moves.json')
-    write_board_to_file(f'{directory}/player_ships.csv', player_ships)
-    write_board_to_file(f'{directory}/enemy_ships.csv', enemy_ships)
+    save_game(player_ships, enemy_ships, directory)
 
 def replay_menu(db: Data, name: str = 'guest') -> bool:
     """Lists the games name has played.
@@ -402,10 +395,19 @@ def load_moves(path: str):
     with open(path, 'r') as f:
         moves = json.load(f)
 
-def write_board_to_file(path: str, board: Board):
+def write_board_to_file(path: str, board: list[list[int]]):
     with open(path, 'w') as f:
         for row in board:
             f.write(','.join(map(str, row)) + '\n')
+
+def save_game(player_board: list[list[int]],
+              enemy_board: list[list[int]],
+              directory: str = SAVE_DIR):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    save_moves(f'{directory}/{MOVES_FILE}')
+    write_board_to_file(f'{directory}/{PLAYER_BOARD_FILE}', player_board)
+    write_board_to_file(f'{directory}/{ENEMY_BOARD_FILE}', enemy_board)
 
 def load_language(path):
     global language
@@ -489,11 +491,12 @@ def main():
     enemy_board = Board(hide = True,
                         hp_str = language['hp'],
                         shots_str = language['shots'])
-    if os.path.exists(PLAYER_SAVE_FILE) and os.path.exists(ENEMY_SAVE_FILE) \
+    if os.path.exists(f'{SAVE_DIR}/{PLAYER_BOARD_FILE}') \
+            and os.path.exists(f'{SAVE_DIR}/{ENEMY_BOARD_FILE}') \
             and yes_no_input(language['save file exists']):
-        load_moves(MOVES_SAVE_FILE)
-        place_from_file(PLAYER_SAVE_FILE, player_board)
-        place_from_file(ENEMY_SAVE_FILE, enemy_board)
+        load_moves(f'{SAVE_DIR}/{MOVES_FILE}')
+        place_from_file(f'{SAVE_DIR}/{PLAYER_BOARD_FILE}', player_board)
+        place_from_file(f'{SAVE_DIR}/{ENEMY_BOARD_FILE}', enemy_board)
     else:
         while place_phase(player_board, enemy_board):
             pass
