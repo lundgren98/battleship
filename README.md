@@ -8,11 +8,11 @@ Run `main.py` with python
 
 #### Optional requrements
 
-* termcolor (color support)
-* tabulate (nicer looking tables)
-* readchar (press any key when viewing replays)
+* [termcolor](https://pypi.org/project/termcolor/) (color support)
+* [tabulate](https://pypi.org/project/tabulate/) (nicer looking tables)
+* [readchar](https://pypi.org/project/readchar/) (press any key when viewing replays)
 
-### How do change language
+### How to change language
 
 The game looks for `language/default.json` and picks `language/english.json` if it can't find it.
 
