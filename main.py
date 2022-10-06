@@ -194,7 +194,8 @@ def manual_placement(player_board: Board, enemy_board: Board):
     ship_list = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
     while ship_list:
         ship_length = pick_ship(ship_list, player_board, enemy_board)
-        direction = pick_direction(player_board, enemy_board)
+        direction = pick_direction(player_board, enemy_board) if \
+                ship_length > 1 else 'H'
         valid_cordinates = False
         err_msg = None
         while not valid_cordinates:
