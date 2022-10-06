@@ -7,7 +7,7 @@
 	"user already exists":	["Användaren", "finns redan"],
 	"welcome message":	["Välkommen,","\nDu har vunnit","utav","partier, ditt genomsnittliga antal försök på vunna matcher är"],
 	"show replay":		"Vill du titta på ett tidigare spelat parti?",
-	"table title":		["id", "1a drag", "vinnare", "förlorare", "v drag","f drag", "v skepp"],
+	"table title":		["id", "datum", "1a drag", "vinnare", "förlorare", "v drag","f drag", "v skepp"],
 	"enter game id":	"Skriv spel id för det parti du vill titta på\neller MAPP för att välja en mapp med partiet",
 	"dir": 			"MAPP",
 	"enter replay dir":	"Mappens namn",

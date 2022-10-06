@@ -7,7 +7,7 @@
 	"user already exists":	["User", "already exists"],
 	"welcome message":	["Welcome","\nYou have won","out of","games, and your average number of tries in a winning game is"],
 	"show replay":		"Do you want to watch a replay of a previous game?",
-	"table title":		["id", "1st move", "winner", "loser", "win moves","lose moves", "win ships"],
+	"table title":		["id", "date", "1st move", "winner", "loser", "win moves","lose moves", "win ships"],
 	"enter game id":	"Enter the game id of the game you want to watch,\nor enter DIR to choose a replay directory",
 	"dir": 			"DIR",
 	"enter replay dir":	"Replay directory",
