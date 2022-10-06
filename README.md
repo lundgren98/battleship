@@ -1,6 +1,42 @@
+## About
+
+Battleship is a two player game where oponents take turns trying to shoot down
+eachother's ships.
+
+In this version of the game you are playing against the computer.
+
 ## How to play
 
 Run `main.py` with python
+
+### Placement phase
+
+![pick ship](images/pick_ship.png)
+
+Pick one of the numbered ships.
+
+![pick direction](images/pick_direction.png)
+
+Choose if you want to place it vertically or horizontally.
+
+![pick cordinates](images/pick_cordinates.png)
+
+And place it with cordinates `ROW` `COLUMN`.
+
+![pick ship again](images/pick_ship_2.png)
+
+### Bomb phase
+
+![shoot ship](images/bomb.png)
+
+![shoot ship again](images/bomb2.png)
+
+Type in the cordinates where you want to shoot.
+If it's a hit, you can shoot again.
+
+![You won](images/win.png)
+
+You win the game when all the oponents ships have been shot down.
 
 #### Requirements
 
