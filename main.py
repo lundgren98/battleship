@@ -87,7 +87,7 @@ def ai_shoot(board: Board,
     hit = board.shoot(x, y)
     # Anounce the shot
     hit_str = language['hit'] if hit else language['miss']
-    board.info_text.append(f'{hit_str} {x} {y}')
+    board.info_text.append(f'{hit_str} {y} {x}')
     free_space = board.h - len(board.info_text) - 3
     if free_space < 0:
         del board.info_text[:-free_space]
@@ -311,8 +311,8 @@ def show_replay(path: str):
             player_turn = not player_board.shoot(*(cordinates))
             hit_str = language['miss'] if player_turn \
                     else language['hit']
-        player_board.info_text.append(
-                f'{hit_str} {" ".join([str(v) for v in cordinates])}')
+        x, y = cordinates
+        player_board.info_text.append(f'{hit_str} {y} {x}')
         free_space = player_board.h - len(player_board.info_text) - 3
         if free_space < 0:
             del player_board.info_text[:-free_space]
