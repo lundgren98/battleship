@@ -49,6 +49,12 @@ class Board:
     def ships(self):
         return [[v & Board.SHIP for v in row] for row in self.board]
 
+    def add_info_text(self, s: str):
+        self.info_text.append(s)
+        free_space = self.h - len(self.info_text) - 3
+        if free_space < 0:
+            del self.info_text[:-free_space]
+
     def space_is_occupied(self, cordinates: list[tuple[int,int]]) -> bool:
         for x, y in cordinates:
             if self.board[y][x] & Board.SHIP:

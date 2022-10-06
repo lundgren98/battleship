@@ -55,7 +55,7 @@ def player_shoot(player_board: Board, enemy_board: Board) -> bool:
     if u_input.upper() == language['save']:
         save_game(player_board.board,
                   enemy_board.board)
-        enemy_board.info_text.append(language['save text'])
+        enemy_board.add_info_text(language['save text'])
         # Didn't hit a ship, but we want to run again
         return True
     y, x = u_input.split(' ')
@@ -87,10 +87,7 @@ def ai_shoot(board: Board,
     hit = board.shoot(x, y)
     # Anounce the shot
     hit_str = language['hit'] if hit else language['miss']
-    board.info_text.append(f'{hit_str} {y} {x}')
-    free_space = board.h - len(board.info_text) - 3
-    if free_space < 0:
-        del board.info_text[:-free_space]
+    board.add_info_text(f'{hit_str} {y} {x}')
     # add the shot to history
     global moves
     moves.append((x,y))
@@ -312,10 +309,7 @@ def show_replay(path: str):
             hit_str = language['miss'] if player_turn \
                     else language['hit']
         x, y = cordinates
-        player_board.info_text.append(f'{hit_str} {y} {x}')
-        free_space = player_board.h - len(player_board.info_text) - 3
-        if free_space < 0:
-            del player_board.info_text[:-free_space]
+        player_board.add_info_text(f'{hit_str} {y} {x}')
     print_boards(player_board, enemy_board)
     exit()
 
