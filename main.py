@@ -279,7 +279,7 @@ def save_ship_placement(board: Board) -> bool:
         if not yes_no_input(file_already_exists, False):
             return True
     #         Check for ships only
-    ships = [[v & Board.SHIP for v in row] for row in board.board]
+    ships = board.ships
     write_board_to_file(path, ships)
     return False
 
@@ -321,8 +321,8 @@ def show_replay(path: str):
 
 def save_replay(db: Data, player_board: Board, enemy_board: Board):
     game_id = tuple(db.max_game_id())[0][0]
-    player_ships = [[v & Board.SHIP for v in row] for row in player_board.board]
-    enemy_ships = [[v & Board.SHIP for v in row] for row in enemy_board.board]
+    player_ships = player_board.ships
+    enemy_ships = enemy_board.ships
     directory = f'{SAVE_DIR}/{game_id}'
     save_game(player_ships, enemy_ships, directory)
 

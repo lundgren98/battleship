@@ -45,6 +45,10 @@ class Board:
         self._shots_str = shots_str 
         self.info_text = []
 
+    @property
+    def ships(self):
+        return [[v & Board.SHIP for v in row] for row in self.board]
+
     def space_is_occupied(self, cordinates: list[tuple[int,int]]) -> bool:
         for x, y in cordinates:
             if self.board[y][x] & Board.SHIP:
