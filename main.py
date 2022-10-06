@@ -275,7 +275,6 @@ def save_ship_placement(board: Board) -> bool:
                  language['file already exists'][1]])
         if not yes_no_input(file_already_exists, False):
             return True
-    #         Check for ships only
     ships = board.ships
     write_board_to_file(path, ships)
     return False

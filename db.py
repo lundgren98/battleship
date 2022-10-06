@@ -110,14 +110,3 @@ class Data:
             s+= f'AND pw = "{pw}"'
         return self._execute(s)
 
-if __name__ == '__main__':
-    data = Data('stats.db')
-    name = input('username: ')
-    from getpass import getpass
-    pw = hash(getpass())
-    data.add_player(name, pw)
-    count = tuple(data.count_games(name))[0][0]
-    print(count)
-    avg = tuple(data.avg_winner_shots(name))[0][0]
-    print(avg)
-

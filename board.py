@@ -1,3 +1,4 @@
+# Colors are optional
 try:
     from termcolor import colored
     USE_COLORS = True
@@ -47,10 +48,12 @@ class Board:
 
     @property
     def ships(self):
+        # Only want to check if the place has a SHIP
         return [[v & Board.SHIP for v in row] for row in self.board]
 
     def add_info_text(self, s: str):
         self.info_text.append(s)
+        # Make sure the lines of text don't run outside the height of the board
         free_space = self.h - len(self.info_text) - 3
         if free_space < 0:
             del self.info_text[:-free_space]
@@ -126,7 +129,7 @@ class Board:
                 '']
         text.extend(self.info_text)
 
-        # TODO: this is dependant on self.w being 10
+        # TODO: this is dependent on self.w being 10
         s = f'+-0123456789-+\n'
 
         for row in range(self.h):
@@ -141,13 +144,4 @@ class Board:
             s += f' | {text_row}\n'
         s += '+-' + self.w * '-' + '-+'
         return s
-
-# TEST CASES
-if __name__ == '__main__':
-    b = Board(10, 10)
-    s1 = Ship((1, 4), 'V', 4)
-    s2 = Ship((8, 1), 'H', 4)
-    for s in (s1, s2):
-        b.place_ship(s)
-    print(b)
 
